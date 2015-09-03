@@ -2,7 +2,7 @@ defmodule Tracker.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "rooms:*", Tracker.RoomChannel
+  channel "*", Tracker.UserChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

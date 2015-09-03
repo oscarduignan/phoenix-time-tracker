@@ -2,9 +2,9 @@ defmodule Tracker.UserController do
   use Tracker.Web, :controller
 
   alias Tracker.User
+  alias Tracker.SessionController
 
-  #broken at the moment
-  #plug Guardian.Plug.EnsureAuthenticated, on_failure: { Tracker.SessionController, :new }
+  plug Guardian.Plug.EnsureAuthenticated, %{ on_failure: { SessionController, :new } } when not action in [:new, :create]
 
   plug :scrub_params, "user" when action in [:create, :update]
 
@@ -22,11 +22,18 @@ defmodule Tracker.UserController do
     changeset = User.changeset(%User{}, :create, user_params)
 
     case Repo.insert(changeset) do
-      {:ok, user} ->
-        conn
-        |> Guardian.Plug.sign_in(user, :token)
-        |> put_flash(:info, "User created successfully.")
-        |> redirect(to: user_path(conn, :index))
+      {:ok, created_user} ->
+        case Guardian.Plug.current_resource(conn) do
+          nil ->
+            conn
+            |> Guardian.Plug.sign_in(created_user, :token)
+            |> put_flash(:info, "Account created.")
+            |> redirect(to: page_path(conn, :index))
+          _ ->
+            conn
+            |> put_flash(:info, "User created.")
+            |> redirect(to: user_path(conn, :index))
+        end
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset)
     end

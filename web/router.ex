@@ -16,6 +16,7 @@ defmodule Tracker.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
   end
 
   scope "/", Tracker do
@@ -25,6 +26,11 @@ defmodule Tracker.Router do
     post "/login", SessionController, :create
     get "/logout", SessionController, :delete
     resources "/users", UserController
+  end
+
+  scope "/api/v1", Tracker do
+    pipe_through :api
+    post "/token", SessionController, :token
   end
 
   # Other scopes may use custom stacks.
